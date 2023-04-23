@@ -259,6 +259,7 @@ hapter 2: The Age of Exploration"""
                 use_fine_history_prompt=use_fine_history_prompt,
                 output_full=True
             )
+            print("after get", flush=True)
             if use_last_generation_as_history:
                 # save to npz
                 os.makedirs('_temp', exist_ok=True)
@@ -270,11 +271,13 @@ hapter 2: The Age of Exploration"""
                 )
                 voice_name = '_temp/history.npz'
             all_parts.append(audio_array)
+            print("after history", flush=True)
 
             # instead of waiting until the end we save the file so that we can start streaming this part.
             fp = "/home/nap/audio{1}.wav".format(cnt)
             print("writing file: {0}".format(fp), flush=True)
             write_wav(fp, SAMPLE_RATE, audio_array)
+            print("file saved!", flush=True)
             file_stream = open(fp, mode="rb")
             return StreamingResponse(file_stream, media_type="audio/wav")
 
