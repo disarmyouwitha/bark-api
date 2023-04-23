@@ -242,6 +242,7 @@ hapter 2: The Age of Exploration"""
         #-------
         async def stream_audio_files():
             filepath = file_list.pop()
+            print("streaming chunk: {0}".format(filepath))
             with open(filepath, "rb") as f:
                 while True:
                     chunk = f.read(2048)
