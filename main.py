@@ -16,6 +16,10 @@ from scipy.io.wavfile import write as write_wav
 from bark.generation import SAMPLE_RATE, preload_models, codec_decode, generate_coarse, generate_fine, generate_text_semantic
 
 
+# load the tokenizer
+tokenizer = BertTokenizer.from_pretrained("bert-base-multilingual-cased")
+
+
 # download and load all models
 preload_models(
     text_use_gpu=True,
@@ -27,6 +31,24 @@ preload_models(
     codec_use_gpu=True,
     force_reload=False
 )
+
+
+# Setup FastAPI:
+app = FastAPI()
+semaphore = asyncio.Semaphore(1)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# [Enter your prompt and speaker here]:
+text_prompt = "You're a kid now, you're a squid now!"
+voice_name = "speaker_0" # use your custom voice name here if you have one
 
 # simple generation
 #audio_array = generate_audio(text_prompt, history_prompt=voice_name, text_temp=0.7, waveform_temp=0.7)
