@@ -272,6 +272,7 @@ hapter 2: The Age of Exploration"""
                 voice_name = '_temp/history.npz'
             all_parts.append(audio_array)
             print("after history", flush=True)
+            print(all_parts)
 
             # instead of waiting until the end we save the file so that we can start streaming this part.
             fp = "/home/nap/audio{1}.wav".format(cnt)
@@ -279,7 +280,7 @@ hapter 2: The Age of Exploration"""
             write_wav(fp, SAMPLE_RATE, audio_array)
             print("file saved!", flush=True)
             file_stream = open(fp, mode="rb")
-            return StreamingResponse(file_stream, media_type="audio/wav")
+            #return StreamingResponse(file_stream, media_type="audio/wav")
 
         #audio_array = np.concatenate(all_parts, axis=-1)
 
@@ -290,6 +291,7 @@ hapter 2: The Age of Exploration"""
         # Use the StreamingResponse class to stream the audio file
         #file_stream = open(file_path, mode="rb")
         #return StreamingResponse(file_stream, media_type="audio/wav")
+        return {"boo":"hiss"}
 
     except Exception as e:
         return {'response': f"Exception while processing request: {e}"}
