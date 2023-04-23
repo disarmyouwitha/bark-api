@@ -206,29 +206,39 @@ async def stream_data(req: GenerateRequest):
             await asyncio.sleep(1)
 
     try:
+        req.message = """The Uncharted Land of Discovery: A Journey Through Time and Space
+[clears throat]
+Chapter 1: The Dawn of Curiosity
+[takes breath]
+Since the dawn of humankind, our species has been driven by a powerful force: curiosity. It is an innate, unquenchable desire to explore, understand, and unravel the mysteries of the world around us. This primal urge has led us on countless adventures, pushing us to the farthest reaches of our planet and beyond.
+
+Early humans, huddled around a flickering fire, gazed up at the night sky and wondered what those twinkling lights were. They had no idea that their curiosity would eventually propel us into the vast, uncharted realm of space. As time progressed, our ancestors began to explore their surroundings, venturing beyond their caves and settlements, driven by the need to discover what lay beyond the horizon.
+
+hapter 2: The Age of Exploration"""
         print(req.message)
 
         # generation settings
         voice_name = 'speaker_4'
         out_filepath = '/home/nap/audio.wav'
-
+        #---
         semantic_temp = 0.7
         semantic_top_k = 50
         semantic_top_p = 0.95
-
+        #---
         coarse_temp = 0.7
         coarse_top_k = 50
         coarse_top_p = 0.95
-
+        #---
         fine_temp = 0.5
-       
+        #---
         use_semantic_history_prompt = True
         use_coarse_history_prompt = True
         use_fine_history_prompt = True
-
         use_last_generation_as_history = True
+        #-------
 
-        texts = split_and_recombine_text(text)
+        # split req.message into lines:
+        texts = split_and_recombine_text(req.message)
 
         all_parts = []
         for i, text in tqdm(enumerate(texts), total=len(texts)):
@@ -258,7 +268,7 @@ async def stream_data(req: GenerateRequest):
                 )
                 voice_name = '_temp/history.npz'
             all_parts.append(audio_array)
-            
+
             # instead of waiting until the end we save the file so that we can start streaming this part.
             write_wav(out_filepath, SAMPLE_RATE, audio_array)
             file_stream = open(file_path, mode="rb")
