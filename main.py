@@ -238,9 +238,7 @@ hapter 2: The Age of Exploration"""
         #-------
 
         # split req.message into lines:
-        print("before lines", flush=True)
         texts = split_and_recombine_text(req.message)
-        print("after lines", flush=True)
 
         cnt = 0
         all_parts = []
@@ -275,9 +273,11 @@ hapter 2: The Age of Exploration"""
             all_parts.append(audio_array)
 
             # instead of waiting until the end we save the file so that we can start streaming this part.
-            print("writing file", flush=True)
-            write_wav("{0}/audio{1}.wav".format(file_path, cnt), SAMPLE_RATE, audio_array)
-            file_stream = open("{0}/audio{1}.wav".format(file_path, cnt), mode="rb")
+            fp = "{0}/audio{1}.wav".format(file_path, cnt)
+            print("writing file: {0}".format(fp), flush=True)
+            write_wav(fp, SAMPLE_RATE, audio_array)
+            file_stream = open(fp, mode="rb")
+            print(file_stream)
             return StreamingResponse(file_stream, media_type="audio/wav")
 
         #audio_array = np.concatenate(all_parts, axis=-1)
