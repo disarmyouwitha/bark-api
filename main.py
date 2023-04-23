@@ -219,7 +219,7 @@ hapter 2: The Age of Exploration"""
 
         # generation settings
         voice_name = 'speaker_4'
-        out_filepath = '/home/nap/audio.wav'
+        out_filepath = '/home/nap'
         #---
         semantic_temp = 0.7
         semantic_top_k = 50
@@ -240,8 +240,10 @@ hapter 2: The Age of Exploration"""
         # split req.message into lines:
         texts = split_and_recombine_text(req.message)
 
+        cnt = 0
         all_parts = []
         for i, text in tqdm(enumerate(texts), total=len(texts)):
+            cnt = cnt+1
             full_generation, audio_array = generate_with_settings(
                 text,
                 semantic_temp=semantic_temp,
@@ -270,8 +272,8 @@ hapter 2: The Age of Exploration"""
             all_parts.append(audio_array)
 
             # instead of waiting until the end we save the file so that we can start streaming this part.
-            write_wav(out_filepath, SAMPLE_RATE, audio_array)
-            file_stream = open(file_path, mode="rb")
+            write_wav("{0}/audio{1}.wav".format(file_path, cnt), SAMPLE_RATE, audio_array)
+            file_stream = open("{0}/audio{1}.wav".format(file_path, cnt), mode="rb")
             return StreamingResponse(file_stream, media_type="audio/wav")
 
         #audio_array = np.concatenate(all_parts, axis=-1)
