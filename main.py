@@ -10,29 +10,51 @@ from typing import Any, Dict, Optional
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 # bark imports:
-from bark import SAMPLE_RATE, generate_audio, preload_models
+from bark.api import generate_audio
+from transformers import BertTokenizer
 from scipy.io.wavfile import write as write_wav
+from bark.generation import SAMPLE_RATE, preload_models, codec_decode, generate_coarse, generate_fine, generate_text_semantic
 
-# load models once:
 
 # download and load all models
-preload_models()
+preload_models(
+    text_use_gpu=True,
+    text_use_small=False,
+    coarse_use_gpu=True,
+    coarse_use_small=False,
+    fine_use_gpu=True,
+    fine_use_small=False,
+    codec_use_gpu=True,
+    force_reload=False
+)
 
-# start fastapi for inference:
+# simple generation
+#audio_array = generate_audio(text_prompt, history_prompt=voice_name, text_temp=0.7, waveform_temp=0.7)
 
-# generate audio from text
-#text_prompt = """
-#     Hello, my name is Suno. And, uh — and I like pizza. [laughs] 
-#     But I also have other interests such as playing tic tac toe.
-#"""
-#audio_array = generate_audio(text_prompt, history_prompt="en_speaker_1")
+# generation with more control
+x_semantic = generate_text_semantic(
+    text_prompt,
+    history_prompt=voice_name,
+    temp=0.7,
+    top_k=50,
+    top_p=0.95,
+)
 
-text_prompt = """
-    I have a silky smooth voice, and today I will tell you about 
-    the exercise regimen of the common sloth.
-"""
-audio_array = generate_audio(text_prompt, history_prompt="en_speaker_1")
+x_coarse_gen = generate_coarse(
+    x_semantic,
+    history_prompt=voice_name,
+    temp=0.7,
+    top_k=50,
+    top_p=0.95,
+)
+x_fine_gen = generate_fine(
+    x_coarse_gen,
+    history_prompt=voice_name,
+    temp=0.5,
+)
+audio_array = codec_decode(x_fine_gen)
 
-# return audio as audio stream:
 
-write_wav("/home/nap/audio.wav", SAMPLE_RATE, audio_array)
+# save audio
+filepath = "/home/nap/audio.wav"
+write_wav(filepath, SAMPLE_RATE, audio_array)
