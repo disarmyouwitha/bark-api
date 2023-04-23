@@ -83,12 +83,12 @@ async def stream_data(req: GenerateRequest):
         audio_array = codec_decode(x_fine_gen)
 
         # save audio
-        filepath = "/home/nap/audio.wav"
-        write_wav(filepath, SAMPLE_RATE, audio_array)
+        file_path = "/home/nap/audio.wav"
+        write_wav(file_path, SAMPLE_RATE, audio_array)
 
-        return { "bark": filepath }
-
-
+        # Use the StreamingResponse class to stream the audio file
+        file_stream = open(file_path, mode="rb")
+        return StreamingResponse(file_stream, media_type="audio/wav")
 
     except Exception as e:
         return {'response': f"Exception while processing request: {e}"}
