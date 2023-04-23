@@ -47,19 +47,19 @@ async def stream_data(req: GenerateRequest):
         except asyncio.TimeoutError:
             print("Server is busy")
             await asyncio.sleep(1)
-            #raise HTTPException(status_code=503, detail="Server is busy, please try again later")
 
     try:
         print(req.message)
 
         # [Enter your prompt and speaker here]:
-        text_prompt = "You're a kid now, you're a squid now!"
+        #text_prompt = "You're a kid now, you're a squid now!"
         voice_name = "en_speaker_1"
 
         # simple generation
-        #audio_array = generate_audio(text_prompt, history_prompt=voice_name, text_temp=0.7, waveform_temp=0.7)
+        audio_array = generate_audio(req.message, history_prompt=voice_name, text_temp=0.7, waveform_temp=0.7)
 
         # generation with more control
+        '''
         x_semantic = generate_text_semantic(
             req.message,
             history_prompt=voice_name,
@@ -81,6 +81,7 @@ async def stream_data(req: GenerateRequest):
             temp=0.5,
         )
         audio_array = codec_decode(x_fine_gen)
+        '''
 
         # save audio
         file_path = "/home/nap/audio.wav"
