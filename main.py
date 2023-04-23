@@ -219,7 +219,6 @@ hapter 2: The Age of Exploration"""
 
         # generation settings
         voice_name = 'speaker_4'
-        out_filepath = '/home/nap'
         #---
         semantic_temp = 0.7
         semantic_top_k = 50
@@ -273,11 +272,10 @@ hapter 2: The Age of Exploration"""
             all_parts.append(audio_array)
 
             # instead of waiting until the end we save the file so that we can start streaming this part.
-            fp = "{0}/audio{1}.wav".format(file_path, cnt)
+            fp = "/home/nap/audio{1}.wav".format(cnt)
             print("writing file: {0}".format(fp), flush=True)
             write_wav(fp, SAMPLE_RATE, audio_array)
             file_stream = open(fp, mode="rb")
-            print(file_stream)
             return StreamingResponse(file_stream, media_type="audio/wav")
 
         #audio_array = np.concatenate(all_parts, axis=-1)
