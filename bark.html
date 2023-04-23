@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>bark-tts</title>
+
+        <!-- Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+        <!-- Site Styles -->
+        <!--<link rel="stylesheet" href="style.css">-->
+        <style>
+            .AI-MSG {
+                font-weight: bold;
+            }
+
+            html {
+                /*background: url("Art-Splatoon-Wallpaper.png") no-repeat center center fixed;*/
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+
+            /*******/
+
+            body {
+                font-family: 'Nunito', sans-serif;
+            }
+
+            input, textarea, hr {
+                border-style: solid;
+                border-width: 1px;
+            }
+
+            .center {
+                margin: auto;
+                width: 50%;
+                padding: 10px;
+            }
+
+            .button {
+                box-sizing: border-box; 
+                border: 1px solid black;
+                background-color: #e2e8f0 !important;
+            }
+
+            /*******/
+
+            /*!
+             * three-dots - v0.3.2
+             * CSS loading animations made with single element
+             * https://nzbin.github.io/three-dots/
+             *
+             * Copyright (c) 2018 nzbin
+             * Released under MIT License
+             */
+
+            /**
+            * ==============================================
+            * Dot Pulse
+            * ==============================================
+            */
+            .dot-pulse {
+               position: relative;
+               left: -9999px;
+               width: 10px;
+               height: 10px;
+               border-radius: 5px;
+               background-color: #9880ff;
+               color: #9880ff;
+               box-shadow: 9999px 0 0 -5px;
+               animation: dot-pulse 1.5s infinite linear;
+               animation-delay: 0.25s;
+            }
+            .dot-pulse::before, .dot-pulse::after {
+              content: "";
+              display: inline-block;
+              position: absolute;
+              top: 0;
+              width: 10px;
+              height: 10px;
+              border-radius: 5px;
+              background-color: #9880ff;
+              color: #9880ff;
+            }
+            .dot-pulse::before {
+              box-shadow: 9984px 0 0 -5px;
+              animation: dot-pulse-before 1.5s infinite linear;
+              animation-delay: 0s;
+            }
+            .dot-pulse::after {
+              box-shadow: 10014px 0 0 -5px;
+              animation: dot-pulse-after 1.5s infinite linear;
+              animation-delay: 0.5s;
+            }
+
+            @keyframes dot-pulse-before {
+              0% {
+                box-shadow: 9984px 0 0 -5px;
+              }
+              30% {
+                box-shadow: 9984px 0 0 2px;
+              }
+              60%, 100% {
+                box-shadow: 9984px 0 0 -5px;
+              }
+            }
+            @keyframes dot-pulse {
+              0% {
+                box-shadow: 9999px 0 0 -5px;
+              }
+              30% {
+                box-shadow: 9999px 0 0 2px;
+              }
+              60%, 100% {
+                box-shadow: 9999px 0 0 -5px;
+              }
+            }
+            @keyframes dot-pulse-after {
+              0% {
+                box-shadow: 10014px 0 0 -5px;
+              }
+              30% {
+                box-shadow: 10014px 0 0 2px;
+              }
+              60%, 100% {
+                box-shadow: 10014px 0 0 -5px;
+              }
+            }
+        </style>
+
+        <!-- Tailwind -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Marked -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/2.1.3/marked.min.js"></script>
+        <!-- SSE.js -->
+        <!--<script src="sse.js"></script>-->
+
+        <script>
+            let messages = [];
+            let curr_msg = "";
+            let waiting = false;
+            const audioElement = new Audio();
+
+            function processStream()
+            {
+                // Create a new audio element
+                var audio = new Audio();
+                audio.controls = true;
+                document.body.appendChild(audio);
+
+                // Send a POST request to the endpoint and receive audio data in response
+                fetch("http://wintermute:7862/generate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: curr_msg
+                    })
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    // Convert the audio data to a URL and set it as the source of the audio element
+                    var url = URL.createObjectURL(blob);
+                    audio.src = url;
+                    audio.play();
+                    waiting = false;
+
+                    // remove dots:
+                    let dots = document.getElementById("dots_container");
+                    if (dots) {
+                        dots.remove();
+                    }
+                });
+            }
+
+            async function send_request()
+            {
+                //generate:
+                processStream()
+            }
+
+            function onSubmit()
+            {
+                if(waiting == false)
+                {
+                    // waiting for response:
+                    waiting = true;
+
+                    let chat_log = document.getElementById("chat_log");
+                    chat_history = chat_log.innerText
+
+                    // add users message to the chat log:
+                    curr_msg = document.getElementById("message").value
+
+                    let curr_message = document.getElementById("message").value
+                    let new_message = document.createElement("p");
+                        new_message.classList.add('USER-MSG');
+                        new_message.innerHTML = ":: "+curr_message;
+                    chat_log.appendChild(new_message);
+                    chat_log.scrollTop = chat_log.scrollHeight;
+                    new_message.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+                    // clear message from div:
+                    document.getElementById("message").value = ''; 
+
+                    // add curr_message to messages[] log for ChatGPT
+                    messages.push({"role": "user", "content": curr_message});
+
+                    // ADD LOADING DOTS HERE:
+                    let new_dots = document.createElement("div");
+                        new_dots.id = "dots_container";
+                        new_dots.style.padding = "10px";
+                        new_dots.innerHTML = `<center><div class="dot-pulse"></div></center>`;
+                    chat_log.appendChild(new_dots);
+                    //chat_log.insertBefore(new_dots, chat_log.firstChild);
+
+                    // Send the message to OpenAI and append AI response to the chat log:
+                    send_request();
+                }
+            }
+
+            function restart_conversation()
+            {
+                // reset conversation:
+                messages = [];
+                let chat_log = document.getElementById("chat_log");
+                    chat_log.innerHTML = ""
+            }
+
+            // DOCUMENT.READY:
+            document.addEventListener("DOMContentLoaded", function(event) {
+                // Hook Enter key to submit messages:
+                let msg = document.getElementById("message");
+                msg.addEventListener("keypress", function(event) {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        onSubmit();
+                    }
+                });
+
+                // set focus on textarea:
+                msg.focus();
+            });
+        </script>
+    </head>
+    <body class="antialiased">
+        <p class="text-3xl font-bold center my-0 w-full text-center">bark:</p>
+        <div id="guestbook" class="center w-full lg:max-w-2xl border-solid border border-black h-[400px] md:h-[512px]" style="background-color:rgb(216, 218, 217, 0.70); overflow:scroll; overflow-x: hidden; padding-top:0px;">
+            <div id="chat_log"></div>
+        </div>
+
+
+        <div id="form_box" class="center w-full lg:max-w-2xl border-solid border border-black mt-3" style="background-color:rgb(216, 218, 217, 0.70);">
+            <form method="post" id="demo-form" action="/" accept-charset="UTF-8">
+                <center><textarea class="w-full h-20" style="padding: 5px;" id="message" name="message" placeholder="Send a message!"></textarea><br></center>
+
+                <div class="justify-center" style="overflow:hidden;">
+                    <center>
+                        <a href="javascript:onSubmit();"><button type="button" class="button mx-1" style="padding:10px;">Send Message!</button></a><br>
+                        
+                        <a href="javascript:save_chat()" style="float:left; color: orange; font-weight:bold;">(save)</a>
+                        <a href="javascript:restart_conversation()" style="float:right; color: orange; font-weight:bold;">(reset)</a>
+                    </center>
+                </div>
+            </form>
+        </div>
+
+	<center><div id="no_logs">* No logs are kept. TTS AI is local.</div></center>
+    </body>
+</html>
+

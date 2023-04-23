@@ -161,7 +161,7 @@ import numpy as np
 
 # generation settings
 voice_name = 'speaker_4'
-out_filepath = 'audio/audio.wav'
+out_filepath = '/home/nap/audio.wav'
 
 semantic_temp = 0.7
 semantic_top_k = 50
