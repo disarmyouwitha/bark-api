@@ -34,7 +34,7 @@ app.add_middleware(
 
 
 @app.get("/check")
-async def stream_data(req: GenerateRequest):
+async def stream_data():
     return { "tts": "ok" }
 
 class GenerateRequest(BaseModel):
