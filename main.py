@@ -14,7 +14,12 @@ from bark.api import generate_audio
 from transformers import BertTokenizer
 from scipy.io.wavfile import write as write_wav
 from bark.generation import SAMPLE_RATE, preload_models, codec_decode, generate_coarse, generate_fine, generate_text_semantic
-
+from time import time
+from tqdm.auto import tqdm
+#from IPython.display import Audio
+from scipy.io.wavfile import write as write_wav
+import os
+import numpy as np
 
 #Split text it into chunks of a desired length trying to keep sentences intact.
 def split_and_recombine_text(text, desired_length=100, max_length=150):
@@ -201,22 +206,73 @@ async def stream_data(req: GenerateRequest):
             await asyncio.sleep(1)
 
     try:
-        # [Enter your prompt and speaker here]:
         print(req.message)
-        #text_prompt = "You're a kid now, you're a squid now!"
-        voice_name = "en_speaker_1"
 
-        # simple generation
-        audio_array = generate_audio(req.message, history_prompt=voice_name, text_temp=0.7, waveform_temp=0.7)
+        # generation settings
+        voice_name = 'speaker_4'
+        out_filepath = '/home/nap/audio.wav'
+
+        semantic_temp = 0.7
+        semantic_top_k = 50
+        semantic_top_p = 0.95
+
+        coarse_temp = 0.7
+        coarse_top_k = 50
+        coarse_top_p = 0.95
+
+        fine_temp = 0.5
+       
+        use_semantic_history_prompt = True
+        use_coarse_history_prompt = True
+        use_fine_history_prompt = True
+
+        use_last_generation_as_history = True
+
+        texts = split_and_recombine_text(text)
+
+        all_parts = []
+        for i, text in tqdm(enumerate(texts), total=len(texts)):
+            full_generation, audio_array = generate_with_settings(
+                text,
+                semantic_temp=semantic_temp,
+                semantic_top_k=semantic_top_k,
+                semantic_top_p=semantic_top_p,
+                coarse_temp=coarse_temp,
+                coarse_top_k=coarse_top_k,
+                coarse_top_p=coarse_top_p,
+                fine_temp=fine_temp,
+                voice_name=voice_name,
+                use_semantic_history_prompt=use_semantic_history_prompt,
+                use_coarse_history_prompt=use_coarse_history_prompt,
+                use_fine_history_prompt=use_fine_history_prompt,
+                output_full=True
+            )
+            if use_last_generation_as_history:
+                # save to npz
+                os.makedirs('_temp', exist_ok=True)
+                np.savez_compressed(
+                    '_temp/history.npz',
+                    semantic_prompt=full_generation['semantic_prompt'],
+                    coarse_prompt=full_generation['coarse_prompt'],
+                    fine_prompt=full_generation['fine_prompt'],
+                )
+                voice_name = '_temp/history.npz'
+            all_parts.append(audio_array)
+            
+            # instead of waiting until the end we save the file so that we can start streaming this part.
+            write_wav(out_filepath, SAMPLE_RATE, audio_array)
+            file_stream = open(file_path, mode="rb")
+            return StreamingResponse(file_stream, media_type="audio/wav")
+
+        #audio_array = np.concatenate(all_parts, axis=-1)
 
         # save audio
-        file_path = "audio.wav"
-        # ^ start using random file name, put in output/<hash>.wav
-        write_wav(file_path, SAMPLE_RATE, audio_array)
+        #write_wav(out_filepath, SAMPLE_RATE, audio_array)
+
 
         # Use the StreamingResponse class to stream the audio file
-        file_stream = open(file_path, mode="rb")
-        return StreamingResponse(file_stream, media_type="audio/wav")
+        #file_stream = open(file_path, mode="rb")
+        #return StreamingResponse(file_stream, media_type="audio/wav")
 
     except Exception as e:
         return {'response': f"Exception while processing request: {e}"}

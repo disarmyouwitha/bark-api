@@ -209,6 +209,7 @@ for i, text in tqdm(enumerate(texts), total=len(texts)):
         )
         voice_name = '_temp/history.npz'
     all_parts.append(audio_array)
+    # instead of waiting until the end we save the file so that we can start streaming this part.
 
 audio_array = np.concatenate(all_parts, axis=-1)
 
