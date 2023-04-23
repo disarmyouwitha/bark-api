@@ -4,7 +4,6 @@ import asyncio
 import uvicorn
 from typing import Union
 from pathlib import Path
-from modules import shared
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Any, Dict, Optional
@@ -22,12 +21,17 @@ preload_models()
 # start fastapi for inference:
 
 # generate audio from text
+#text_prompt = """
+#     Hello, my name is Suno. And, uh — and I like pizza. [laughs] 
+#     But I also have other interests such as playing tic tac toe.
+#"""
+#audio_array = generate_audio(text_prompt, history_prompt="en_speaker_1")
+
 text_prompt = """
-     Hello, my name is Suno. And, uh — and I like pizza. [laughs] 
-     But I also have other interests such as playing tic tac toe.
+    I have a silky smooth voice, and today I will tell you about 
+    the exercise regimen of the common sloth.
 """
 audio_array = generate_audio(text_prompt, history_prompt="en_speaker_1")
-print(audio_array)
 
 # return audio as audio stream:
 
