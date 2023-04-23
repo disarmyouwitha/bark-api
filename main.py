@@ -239,10 +239,22 @@ hapter 2: The Age of Exploration"""
         # split req.message into lines:
         texts = split_and_recombine_text(req.message)
 
+        #-------
+        async def stream_audio_files():
+            filepath = file_list.pop()
+            with open(filepath, "rb") as f:
+                while True:
+                    chunk = f.read(2048)
+                    if not chunk:
+                        break
+                    yield chunk
+        #---
+
         cnt = 0
+        curr = 0
         all_parts = []
+        file_list = []
         for i, text in tqdm(enumerate(texts), total=len(texts)):
-            cnt = cnt+1
             print("CNT: {0}".format(cnt), flush=True)
             full_generation, audio_array = generate_with_settings(
                 text,
@@ -259,7 +271,7 @@ hapter 2: The Age of Exploration"""
                 use_fine_history_prompt=use_fine_history_prompt,
                 output_full=True
             )
-            print("after get", flush=True)
+
             if use_last_generation_as_history:
                 # save to npz
                 os.makedirs('_temp', exist_ok=True)
@@ -271,26 +283,22 @@ hapter 2: The Age of Exploration"""
                 )
                 voice_name = '_temp/history.npz'
             all_parts.append(audio_array)
-            print("after history", flush=True)
-            print(all_parts)
 
             # instead of waiting until the end we save the file so that we can start streaming this part.
             fp = "/home/nap/audio{0}.wav".format(cnt)
-            print("writing file: {0}".format(fp), flush=True)
             write_wav(fp, SAMPLE_RATE, audio_array)
-            print("file saved!", flush=True)
+            print("chunk saved! {0}".format(fp), flush=True)
+            file_list.append(fp)
+            cnt = cnt+1
+
+
             file_stream = open(fp, mode="rb")
-            return StreamingResponse(file_stream, media_type="audio/wav")
+            return StreamingResponse(stream_audio_files(), media_type="audio/wav")
 
         #audio_array = np.concatenate(all_parts, axis=-1)
 
         # save audio
         #write_wav(out_filepath, SAMPLE_RATE, audio_array)
-
-
-        # Use the StreamingResponse class to stream the audio file
-        #file_stream = open(file_path, mode="rb")
-        #return StreamingResponse(file_stream, media_type="audio/wav")
 
     except Exception as e:
         return {'response': f"Exception while processing request: {e}"}
